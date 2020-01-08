@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.29609.76
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionTreeParsing.Console", "ExpressionTreeParsing.Console\ExpressionTreeParsing.Console.csproj", "{792CF02C-5348-4E1B-8722-32F323A8FC20}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionTreeParsing.Domain", "ExpressionTreeParsing.Domain\ExpressionTreeParsing.Domain.csproj", "{DF40280B-C336-47B9-A10D-82B875425835}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpressionTreeParsing.Application", "ExpressionTreeParsing.Application\ExpressionTreeParsing.Application.csproj", "{EC6F8A8A-3408-4B77-B05E-0BA64535F526}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{792CF02C-5348-4E1B-8722-32F323A8FC20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{792CF02C-5348-4E1B-8722-32F323A8FC20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{792CF02C-5348-4E1B-8722-32F323A8FC20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF40280B-C336-47B9-A10D-82B875425835}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF40280B-C336-47B9-A10D-82B875425835}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF40280B-C336-47B9-A10D-82B875425835}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF40280B-C336-47B9-A10D-82B875425835}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC6F8A8A-3408-4B77-B05E-0BA64535F526}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC6F8A8A-3408-4B77-B05E-0BA64535F526}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC6F8A8A-3408-4B77-B05E-0BA64535F526}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC6F8A8A-3408-4B77-B05E-0BA64535F526}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
