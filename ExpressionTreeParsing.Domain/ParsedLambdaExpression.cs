@@ -8,21 +8,29 @@ namespace ExpressionTreeParsing.Domain
     {
         public ParsedLambdaExpression(
             ParsedExpression body,
+            string name,
             IEnumerable<ParsedParameterExpression> parameters,
-            ParsedType returnType)
+            ParsedType returnType,
+            bool tailCall)
             : base()
         {
             this.Body = body;
+            this.Name = name;
             this.Parameters = parameters.ToArray();
             this.ReturnType = returnType;
+            this.TailCall = tailCall;
         }
 
         public ParsedExpression Body { get; }
 
         public override ExpressionType NodeType => ExpressionType.Lambda;
 
+        public string Name { get; }
+
         public IEnumerable<ParsedParameterExpression> Parameters { get; }
 
         public ParsedType ReturnType { get; }
+
+        public bool TailCall { get; }
     }
 }

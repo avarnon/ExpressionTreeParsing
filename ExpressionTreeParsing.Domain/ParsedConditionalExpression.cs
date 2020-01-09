@@ -7,12 +7,14 @@ namespace ExpressionTreeParsing.Domain
         public ParsedConditionalExpression(
             ParsedExpression ifFalse,
             ParsedExpression ifTrue,
-            ParsedExpression test)
+            ParsedExpression test,
+            ParsedType type)
             : base()
         {
             this.IfFalse = ifFalse;
             this.IfTrue = ifTrue;
             this.Test = test;
+            this.Type = type;
         }
 
         public ParsedExpression IfFalse { get; }
@@ -22,5 +24,7 @@ namespace ExpressionTreeParsing.Domain
         public override ExpressionType NodeType => ExpressionType.Conditional;
 
         public ParsedExpression Test { get; }
+
+        public ParsedType Type { get; }
     }
 }

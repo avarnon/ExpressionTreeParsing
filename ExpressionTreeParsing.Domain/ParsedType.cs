@@ -9,9 +9,6 @@
 
         public string AssemblyQualifiedName { get; }
 
-        public override string ToString()
-        {
-            return this.AssemblyQualifiedName;
-        }
+        public override string ToString() => this.AssemblyQualifiedName;
     }
 }

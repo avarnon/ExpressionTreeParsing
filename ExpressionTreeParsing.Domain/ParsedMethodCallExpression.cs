@@ -8,24 +8,24 @@ namespace ExpressionTreeParsing.Domain
     {
         public ParsedMethodCallExpression(
             IEnumerable<ParsedExpression> arguments,
+            ParsedExpression instance,
             ParsedMethodInfo method,
-            ParsedExpression @object,
             ParsedType type)
             : base()
         {
             this.Arguments = arguments.ToArray();
+            this.Instance = instance;
             this.Method = method;
-            this.Object = @object;
             this.Type = type;
         }
 
         public IEnumerable<ParsedExpression> Arguments { get; }
 
+        public ParsedExpression Instance { get; }
+
         public ParsedMethodInfo Method { get; }
 
         public override ExpressionType NodeType => ExpressionType.Call;
-
-        public ParsedExpression Object { get; }
 
         public ParsedType Type { get; }
     }

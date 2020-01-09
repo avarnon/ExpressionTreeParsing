@@ -7,6 +7,7 @@ namespace ExpressionTreeParsing.Domain
         public ParsedDebugInfoExpression(
             int endColumn,
             int endLine,
+            ParsedSymbolDocumentInfo document,
             bool isClear,
             int startColumn,
             int startLine)
@@ -17,11 +18,14 @@ namespace ExpressionTreeParsing.Domain
             this.IsClear = isClear;
             this.StartColumn = startColumn;
             this.StartLine = startLine;
+            this.Document = document;
         }
 
         public int EndColumn { get; }
 
         public int EndLine { get; }
+
+        public ParsedSymbolDocumentInfo Document { get; }
 
         public bool IsClear { get; }
 
