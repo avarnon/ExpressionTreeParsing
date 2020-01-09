@@ -8,7 +8,6 @@ namespace ExpressionTreeParsing.Domain
         {
             this.DeclaringType = declaringType;
             this.Name = name;
-            this.MemberTypes = memberTypes;
             this.ReflectedType = reflectedType;
         }
 
@@ -16,7 +15,7 @@ namespace ExpressionTreeParsing.Domain
 
         public string Name { get; }
 
-        public abstract MemberTypes MemberTypes { get; }
+        public abstract MemberTypes MemberType { get; }
 
         public ParsedType ReflectedType { get; }
     }

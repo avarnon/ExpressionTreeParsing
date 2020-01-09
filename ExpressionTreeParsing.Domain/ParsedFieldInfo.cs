@@ -12,6 +12,6 @@ namespace ExpressionTreeParsing.Domain
 
         public ParsedType FieldType { get; }
 
-        public override MemberTypes MemberTypes => MemberTypes.Field;
+        public override MemberTypes MemberType => MemberTypes.Field;
     }
 }

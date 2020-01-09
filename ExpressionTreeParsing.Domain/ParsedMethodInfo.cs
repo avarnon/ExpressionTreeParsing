@@ -11,7 +11,7 @@ namespace ExpressionTreeParsing.Domain
         {
             this.IsPublic = isPublic;
             this.IsStatic = isStatic;
-            this.Parameters = parameters.ToList();
+            this.Parameters = parameters.ToArray();
             this.ReturnType = returnType;
         }
 
@@ -19,7 +19,7 @@ namespace ExpressionTreeParsing.Domain
 
         public bool IsStatic { get; }
 
-        public override MemberTypes MemberTypes => MemberTypes.Method;
+        public override MemberTypes MemberType => MemberTypes.Method;
 
         public IEnumerable<ParsedParameterInfo> Parameters { get; }
 

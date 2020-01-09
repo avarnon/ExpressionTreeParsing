@@ -13,10 +13,10 @@ namespace ExpressionTreeParsing.Domain
             IEnumerable<ParsedParameterExpression> variables)
             : base()
         {
-            this.Expressions = expressions.ToList();
+            this.Expressions = expressions.ToArray();
             this.Result = result;
             this.Type = type;
-            this.Variables = variables.ToList();
+            this.Variables = variables.ToArray();
         }
 
         public IEnumerable<ParsedExpression> Expressions { get; }
@@ -25,7 +25,7 @@ namespace ExpressionTreeParsing.Domain
 
         public ParsedExpression Result { get; }
 
-        public ParsedMeParsedTypethodInfo Type { get; }
+        public ParsedType Type { get; }
 
         public IEnumerable<ParsedParameterExpression> Variables { get; }
     }

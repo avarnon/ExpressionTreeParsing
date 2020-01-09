@@ -10,7 +10,7 @@ namespace ExpressionTreeParsing.Domain
             this.PropertyType = propertyType;
         }
 
-        public override MemberTypes MemberTypes => MemberTypes.Property;
+        public override MemberTypes MemberType => MemberTypes.Property;
 
         public ParsedType PropertyType { get; }
     }

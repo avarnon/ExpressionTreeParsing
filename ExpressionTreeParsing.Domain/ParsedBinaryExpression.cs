@@ -25,8 +25,8 @@ namespace ExpressionTreeParsing.Domain
 
         public ParsedMethodInfo Method { get; }
 
-        public ParsedExpression Right { get; }
-
         public override ExpressionType NodeType { get; }
+
+        public ParsedExpression Right { get; }
     }
 }

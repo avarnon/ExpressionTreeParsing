@@ -193,59 +193,39 @@ namespace ExpressionTreeParsing.Application
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("endColumn", expression.EndColumn),
-            new JProperty("endLine", expression.EndLine),
-            new JProperty("startColumn", expression.StartColumn),
-            new JProperty("startLine", expression.StartLine),
-            new JProperty("nodeType", expression.NodeType.ToString()),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedDebugInfoExpression(
+                expression.EndColumn,
+                expression.EndLine,
+                expression.IsClear,
+                expression.StartColumn,
+                expression.StartLine);
         }
 
         private ParsedDefaultExpression Serialize(DefaultExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("nodeType", expression.NodeType.ToString()),
-            new JProperty("type", expression.Type == null ? null : Serialize(expression.Type)),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedDefaultExpression(expression.Type == null ? null : Serialize(expression.Type));
         }
 
         private ParsedDynamicExpression Serialize(DynamicExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("arguments", expression.Arguments.Count > 0 ? new JArray(expression.Arguments.Select(Serialize).ToArray()) : null),
-            new JProperty("delegateType", expression.DelegateType == null ? null : Serialize(expression.DelegateType)),
-            new JProperty("nodeType", expression.NodeType.ToString()),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedDynamicExpression(
+                expression.Arguments.Select(Serialize).ToArray(),
+                expression.DelegateType == null ? null : Serialize(expression.DelegateType));
         }
 
         private ParsedGotoExpression Serialize(GotoExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("kind", expression.Kind),
-            new JProperty("nodeType", expression.NodeType.ToString()),
-            new JProperty("target", expression.Target == null ? null : Serialize(expression.Target)),
-            new JProperty("type", expression.Type == null ? null : Serialize(expression.Type)),
-            new JProperty("value", expression.Value == null ? null : Serialize(expression.Value)),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedGotoExpression(
+                expression.Kind,
+                expression.Target == null ? null : Serialize(expression.Target),
+                expression.Type == null ? null : Serialize(expression.Type),
+                expression.Value == null ? null : Serialize(expression.Value));
         }
 
         private ParsedFieldInfo Serialize(FieldInfo fieldInfo)
@@ -263,43 +243,29 @@ namespace ExpressionTreeParsing.Application
         {
             if (labelTarget == null) throw new ArgumentNullException(nameof(labelTarget));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("name", labelTarget.Name),
-            new JProperty("type", labelTarget.Type == null ? null : Serialize(labelTarget.Type)),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedLabelTarget(
+                labelTarget.Name,
+                labelTarget.Type == null ? null : Serialize(labelTarget.Type));
         }
 
         private ParsedLambdaExpression Serialize(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("body", expression.Body == null ? null : Serialize(expression.Body)),
-            new JProperty("nodeType", expression.NodeType.ToString()),
-            new JProperty("parameters", expression.Parameters.Count > 0 ? new JArray(expression.Parameters.Select(Serialize).ToArray()) : null),
-            new JProperty("returnType", expression.ReturnType == null ? null : Serialize(expression.ReturnType)),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedLambdaExpression(
+                expression.Body == null ? null : Serialize(expression.Body),
+                expression.Parameters.Select(Serialize).ToArray(),
+                expression.ReturnType == null ? null : Serialize(expression.ReturnType));
         }
 
         private ParsedMemberExpression Serialize(MemberExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("expression", expression.Expression == null ? null : Serialize(expression.Expression)),
-            new JProperty("member", expression.Member == null ? null : Serialize(expression.Member)),
-            new JProperty("nodeType", expression.NodeType.ToString()),
-            new JProperty("type", expression.Type == null ? null : Serialize(expression.Type)),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedMemberExpression(
+                expression.Expression == null ? null : Serialize(expression.Expression),
+                expression.Member == null ? null : Serialize(expression.Member),
+                expression.Type == null ? null : Serialize(expression.Type));
         }
 
         private ParsedMemberInfo Serialize(MemberInfo memberInfo)
@@ -340,43 +306,31 @@ namespace ExpressionTreeParsing.Application
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("arguments", expression.Arguments.Count > 0 ? new JArray(expression.Arguments.Select(Serialize).ToArray()) : null),
-            new JProperty("method", expression.Method == null ? null : Serialize(expression.Method)),
-            new JProperty("nodeType", expression.NodeType.ToString()),
-            new JProperty("object", expression.Object == null ? null : Serialize(expression.Object)),
-            new JProperty("type", Serialize(expression.Type)),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedMethodCallExpression(
+                expression.Arguments.Select(Serialize).ToArray(),
+                expression.Method == null ? null : Serialize(expression.Method),
+                expression.Object == null ? null : Serialize(expression.Object),
+                expression.Type == null ? null : Serialize(expression.Type));
         }
 
         private ParsedParameterExpression Serialize(ParameterExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("name", expression.Name),
-            new JProperty("nodeType", expression.NodeType.ToString()),
-            new JProperty("type", expression.Type == null ? null : Serialize(expression.Type)),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedParameterExpression(
+                expression.IsByRef,
+                expression.Name,
+                expression.Type == null ? null : Serialize(expression.Type));
         }
 
         private ParsedParameterInfo Serialize(ParameterInfo parameterInfo)
         {
             if (parameterInfo == null) throw new ArgumentNullException(nameof(parameterInfo));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("name", parameterInfo.Name),
-            new JProperty("parameterType", parameterInfo.ParameterType == null ? null : Serialize(parameterInfo.ParameterType)),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedParameterInfo(
+                parameterInfo.Name,
+                parameterInfo.ParameterType == null ? null : Serialize(parameterInfo.ParameterType),
+                parameterInfo.Position);
         }
 
         private ParsedPropertyInfo Serialize(PropertyInfo propertyInfo)
@@ -401,14 +355,10 @@ namespace ExpressionTreeParsing.Application
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-            List<JProperty> properties = new List<JProperty>()
-        {
-            new JProperty("operand", expression.Operand == null ? null : Serialize(expression.Operand)),
-            new JProperty("method", expression.Method == null ? null : Serialize(expression.Method)),
-            new JProperty("nodeType", expression.NodeType.ToString()),
-        };
-
-            return new JObject(properties.Where(p => p.Value != null).ToArray());
+            return new ParsedUnaryExpression(
+                expression.Operand == null ? null : Serialize(expression.Operand),
+                expression.Method == null ? null : Serialize(expression.Method),
+                expression.NodeType);
         }
     }
 }
