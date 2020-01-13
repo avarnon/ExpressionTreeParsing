@@ -9,7 +9,7 @@ namespace ExpressionTreeParsing.Application
 {
     public partial class ExpressionSerializer<TModel> : IExpressionSerializer<TModel>
     {
-        public static Expression Deserialize(ParsedExpression parsedExpression)
+        public Expression Deserialize(ParsedExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -39,14 +39,42 @@ namespace ExpressionTreeParsing.Application
                 case ExpressionType.Goto:
                     return Deserialize(parsedExpression as ParsedGotoExpression);
 
+                case ExpressionType.Index:
+                    return Deserialize(parsedExpression as ParsedIndexExpression);
+
+                case ExpressionType.Invoke:
+                    return Deserialize(parsedExpression as ParsedInvocationExpression);
+
+                case ExpressionType.Label:
+                    return Deserialize(parsedExpression as ParsedLabelExpression);
+
                 case ExpressionType.Lambda:
                     return Deserialize(parsedExpression as ParsedLambdaExpression);
+
+                case ExpressionType.ListInit:
+                    return Deserialize(parsedExpression as ParsedListInitExpression);
+
+                case ExpressionType.Loop:
+                    return Deserialize(parsedExpression as ParsedLoopExpression);
 
                 case ExpressionType.MemberAccess:
                     return Deserialize(parsedExpression as ParsedMemberExpression);
 
+                case ExpressionType.MemberInit:
+                    return Deserialize(parsedExpression as ParsedMemberInitExpression);
+
+                case ExpressionType.New:
+                    return Deserialize(parsedExpression as ParsedNewExpression);
+
                 case ExpressionType.Parameter:
                     return Deserialize(parsedExpression as ParsedParameterExpression);
+
+                case ExpressionType.RuntimeVariables:
+                    return Deserialize(parsedExpression as ParsedRuntimeVariablesExpression);
+
+                case ExpressionType.NewArrayBounds:
+                case ExpressionType.NewArrayInit:
+                    return Deserialize(parsedExpression as ParsedNewArrayExpression);
 
                 case ExpressionType.Add:
                 case ExpressionType.AddAssign:
@@ -112,26 +140,16 @@ namespace ExpressionTreeParsing.Application
                     return Deserialize(parsedExpression as ParsedUnaryExpression);
 
                 case ExpressionType.Extension:
-                case ExpressionType.Index:
-                case ExpressionType.Invoke:
-                case ExpressionType.Label:
-                case ExpressionType.ListInit:
-                case ExpressionType.Loop:
-                case ExpressionType.MemberInit:
-                case ExpressionType.New:
-                case ExpressionType.NewArrayBounds:
-                case ExpressionType.NewArrayInit:
-                case ExpressionType.RuntimeVariables:
                 case ExpressionType.Switch:
                 case ExpressionType.Try:
                 case ExpressionType.TypeEqual:
                 case ExpressionType.TypeIs:
                 default:
-                    throw new Exception($"Unknown expression type {parsedExpression.NodeType}");
+                    throw new NotImplementedException($"Unknown expression type {parsedExpression.NodeType}");
             }
         }
 
-        private static BinaryExpression Deserialize(ParsedBinaryExpression parsedExpression)
+        private BinaryExpression Deserialize(ParsedBinaryExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -144,7 +162,7 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.Conversion == null ? null : Deserialize(parsedExpression.Conversion));
         }
 
-        private static BlockExpression Deserialize(ParsedBlockExpression parsedExpression)
+        private BlockExpression Deserialize(ParsedBlockExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -167,7 +185,7 @@ namespace ExpressionTreeParsing.Application
                 finalExpressions);
         }
 
-        private static ConditionalExpression Deserialize(ParsedConditionalExpression parsedExpression)
+        private ConditionalExpression Deserialize(ParsedConditionalExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -178,7 +196,7 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type));
         }
 
-        private static ConstantExpression Deserialize(ParsedConstantExpression parsedExpression)
+        private ConstantExpression Deserialize(ParsedConstantExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -204,7 +222,57 @@ namespace ExpressionTreeParsing.Application
                 type);
         }
 
-        private static DebugInfoExpression Deserialize(ParsedDebugInfoExpression parsedExpression)
+        private ConstructorInfo Deserialize(ParsedConstructorInfo parsedConstructorInfo, Type reflectedType)
+        {
+            if (parsedConstructorInfo == null) throw new ArgumentNullException(nameof(parsedConstructorInfo));
+            if (reflectedType == null) throw new ArgumentNullException(nameof(reflectedType));
+
+            BindingFlags bindingFlags = (parsedConstructorInfo.IsPublic ? BindingFlags.Public : BindingFlags.NonPublic);
+
+            Func<IEnumerable<ParameterInfo>, IEnumerable<ParsedParameterInfo>, bool> parametersMatch = (paramterInfos, parsedParameterInfos) =>
+            {
+                if (paramterInfos == null) throw new ArgumentNullException(nameof(paramterInfos));
+                if (parsedParameterInfos == null) throw new ArgumentNullException(nameof(parsedParameterInfos));
+
+                if (paramterInfos.Count() != parsedParameterInfos.Count()) return false;
+
+                for (int i = 0; i < paramterInfos.Count(); i++)
+                {
+                    ParameterInfo parameterInfo = paramterInfos.ElementAt(i);
+                    ParsedParameterInfo parsedParameterInfo = parsedParameterInfos.ElementAt(i);
+
+                    if (parameterInfo.Name != parsedParameterInfo.Name) return false;
+
+                    Type source = parsedParameterInfo.ParameterType == null ? null : Deserialize(parsedParameterInfo.ParameterType);
+                    if (parameterInfo.ParameterType != source)
+                    {
+                        Type parameterInfo2 = parameterInfo.ParameterType.IsGenericType ? parameterInfo.ParameterType.GetGenericTypeDefinition() : parameterInfo.ParameterType;
+                        Type source2 = source.IsGenericType ? source.GetGenericTypeDefinition() : source;
+
+                        if (parameterInfo2 != source2) return false;
+                    }
+                }
+
+                return true;
+            };
+            Func<IEnumerable<Type>, IEnumerable<ParsedType>, bool> genericArgumentsMatch = (types, parsedTypes) =>
+            {
+                if (types == null) throw new ArgumentNullException(nameof(types));
+                if (parsedTypes == null) throw new ArgumentNullException(nameof(parsedTypes));
+
+                if (types.Count() != parsedTypes.Count()) return false;
+
+                return true;
+            };
+
+            return reflectedType.GetConstructors(bindingFlags)
+                .Where(_ => _.Name == parsedConstructorInfo.Name &&
+                            parametersMatch(_.GetParameters(), parsedConstructorInfo.Parameters) &&
+                            genericArgumentsMatch(_.GetGenericArguments(), parsedConstructorInfo.GenericArguments))
+                .SingleOrDefault();
+        }
+
+        private DebugInfoExpression Deserialize(ParsedDebugInfoExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -216,14 +284,14 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.EndColumn);
         }
 
-        private static DefaultExpression Deserialize(ParsedDefaultExpression parsedExpression)
+        private DefaultExpression Deserialize(ParsedDefaultExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
             return Expression.Default(parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type));
         }
 
-        private static DynamicExpression Deserialize(ParsedDynamicExpression parsedExpression)
+        private DynamicExpression Deserialize(ParsedDynamicExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -233,7 +301,16 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.Arguments.Select(Deserialize).ToArray());
         }
 
-        private static FieldInfo Deserialize(ParsedFieldInfo parsedFieldInfo, Type reflectedType)
+        private ElementInit Deserialize(ParsedElementInit parsedElementInit)
+        {
+            if (parsedElementInit == null) throw new ArgumentNullException(nameof(parsedElementInit));
+
+            return Expression.ElementInit(
+                parsedElementInit.AddMethod == null ? null : (MethodInfo)Deserialize(parsedElementInit.AddMethod as ParsedMethodInfo),
+                parsedElementInit.Arguments.Select(Deserialize).ToArray());
+        }
+
+        private FieldInfo Deserialize(ParsedFieldInfo parsedFieldInfo, Type reflectedType)
         {
             if (parsedFieldInfo == null) throw new ArgumentNullException(nameof(parsedFieldInfo));
             if (reflectedType == null) throw new ArgumentNullException(nameof(reflectedType));
@@ -244,7 +321,7 @@ namespace ExpressionTreeParsing.Application
             return reflectedType.GetField(parsedFieldInfo.Name, bindingFlags) ?? throw new Exception($"Field {parsedFieldInfo.Name} not found on type {reflectedType}");
         }
 
-        private static GotoExpression Deserialize(ParsedGotoExpression parsedExpression)
+        private GotoExpression Deserialize(ParsedGotoExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -254,7 +331,34 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type));
         }
 
-        private static LabelTarget Deserialize(ParsedLabelTarget parsedLabelTarget)
+        private IndexExpression Deserialize(ParsedIndexExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.ArrayAccess(
+                parsedExpression.Array == null ? null : Deserialize(parsedExpression.Array),
+                parsedExpression.Indexes.Select(Deserialize).ToArray());
+        }
+
+        private InvocationExpression Deserialize(ParsedInvocationExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.Invoke(
+                parsedExpression.Expression == null ? null : Deserialize(parsedExpression.Expression),
+                parsedExpression.Arguments.Select(Deserialize).ToArray());
+        }
+
+        private LabelExpression Deserialize(ParsedLabelExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.Label(
+                parsedExpression.Target == null ? null : Deserialize(parsedExpression.Target),
+                parsedExpression.DefaultValue == null ? null : Deserialize(parsedExpression.DefaultValue));
+        }
+
+        private LabelTarget Deserialize(ParsedLabelTarget parsedLabelTarget)
         {
             if (parsedLabelTarget == null) throw new ArgumentNullException(nameof(parsedLabelTarget));
 
@@ -263,7 +367,7 @@ namespace ExpressionTreeParsing.Application
                 parsedLabelTarget.Name);
         }
 
-        private static LambdaExpression Deserialize(ParsedLambdaExpression parsedExpression)
+        private LambdaExpression Deserialize(ParsedLambdaExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -284,7 +388,55 @@ namespace ExpressionTreeParsing.Application
                 parameters);
         }
 
-        private static MemberExpression Deserialize(ParsedMemberExpression parsedExpression)
+        private ListInitExpression Deserialize(ParsedListInitExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.ListInit(
+                parsedExpression.NewExpression == null ? null : Deserialize(parsedExpression.NewExpression),
+                parsedExpression.Initializers.Select(Deserialize).ToArray());
+        }
+
+        private LoopExpression Deserialize(ParsedLoopExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.Loop(
+                parsedExpression.Body == null ? null : Deserialize(parsedExpression.Body),
+                parsedExpression.Break == null ? null : Deserialize(parsedExpression.Break),
+                parsedExpression.Continue == null ? null : Deserialize(parsedExpression.Continue));
+        }
+
+        private MemberAssignment Deserialize(ParsedMemberAssignment parsedMemberBinding)
+        {
+            if (parsedMemberBinding == null) throw new ArgumentNullException(nameof(parsedMemberBinding));
+
+            return Expression.Bind(
+                parsedMemberBinding.Member == null ? null : Deserialize(parsedMemberBinding.Member),
+                parsedMemberBinding.Expression == null ? null : Deserialize(parsedMemberBinding.Expression));
+        }
+
+        private MemberBinding Deserialize(ParsedMemberBinding parsedMemberBinding)
+        {
+            if (parsedMemberBinding == null) throw new ArgumentNullException(nameof(parsedMemberBinding));
+
+            switch (parsedMemberBinding.BindingType)
+            {
+                case MemberBindingType.Assignment:
+                    return Deserialize(parsedMemberBinding as ParsedMemberAssignment);
+
+                case MemberBindingType.ListBinding:
+                    return Deserialize(parsedMemberBinding as ParsedMemberListBinding);
+
+                case MemberBindingType.MemberBinding:
+                    return Deserialize(parsedMemberBinding as ParsedMemberMemberBinding);
+
+                default:
+                    throw new NotImplementedException($"Unknown binding type {parsedMemberBinding.BindingType}");
+            }
+        }
+
+        private MemberExpression Deserialize(ParsedMemberExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -293,7 +445,7 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.Member == null ? null : Deserialize(parsedExpression.Member));
         }
 
-        private static MemberInfo Deserialize(ParsedMemberInfo parsedMemberInfo)
+        private MemberInfo Deserialize(ParsedMemberInfo parsedMemberInfo)
         {
             if (parsedMemberInfo == null) throw new ArgumentNullException(nameof(parsedMemberInfo));
 
@@ -303,6 +455,9 @@ namespace ExpressionTreeParsing.Application
 
             switch (parsedMemberInfo.MemberType)
             {
+                case MemberTypes.Constructor:
+                    return Deserialize(parsedMemberInfo as ParsedConstructorInfo, reflectedType);
+
                 case MemberTypes.Field:
                     return Deserialize(parsedMemberInfo as ParsedFieldInfo, reflectedType);
 
@@ -312,17 +467,43 @@ namespace ExpressionTreeParsing.Application
                 case MemberTypes.Method:
                     return Deserialize(parsedMemberInfo as ParsedMethodInfo, reflectedType);
 
-                case MemberTypes.Constructor:
                 case MemberTypes.Custom:
                 case MemberTypes.Event:
                 case MemberTypes.NestedType:
                 case MemberTypes.TypeInfo:
                 default:
-                    throw new NotImplementedException();
+                    throw new NotImplementedException($"Unknown member type {parsedMemberInfo.MemberType}");
             }
         }
 
-        private static MethodCallExpression Deserialize(ParsedMethodCallExpression parsedExpression)
+        private MemberListBinding Deserialize(ParsedMemberListBinding parsedMemberBinding)
+        {
+            if (parsedMemberBinding == null) throw new ArgumentNullException(nameof(parsedMemberBinding));
+
+            return Expression.ListBind(
+                parsedMemberBinding.Member == null ? null : Deserialize(parsedMemberBinding.Member),
+                parsedMemberBinding.Initializers.Select(Deserialize).ToArray());
+        }
+
+        private MemberInitExpression Deserialize(ParsedMemberInitExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.MemberInit(
+                parsedExpression.NewExpression == null ? null : Deserialize(parsedExpression.NewExpression),
+                parsedExpression.Bindings.Select(Deserialize).ToArray());
+        }
+
+        private MemberMemberBinding Deserialize(ParsedMemberMemberBinding parsedMemberBinding)
+        {
+            if (parsedMemberBinding == null) throw new ArgumentNullException(nameof(parsedMemberBinding));
+
+            return Expression.MemberBind(
+                parsedMemberBinding.Member == null ? null : Deserialize(parsedMemberBinding.Member),
+                parsedMemberBinding.Bindings.Select(Deserialize).ToArray());
+        }
+
+        private MethodCallExpression Deserialize(ParsedMethodCallExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -332,7 +513,7 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.Arguments.Select(Deserialize).ToArray());
         }
 
-        private static MethodInfo Deserialize(ParsedMethodInfo parsedMethodInfo, Type reflectedType)
+        private MethodInfo Deserialize(ParsedMethodInfo parsedMethodInfo, Type reflectedType)
         {
             if (parsedMethodInfo == null) throw new ArgumentNullException(nameof(parsedMethodInfo));
             if (reflectedType == null) throw new ArgumentNullException(nameof(reflectedType));
@@ -391,7 +572,35 @@ namespace ExpressionTreeParsing.Application
             return methodInfo;
         }
 
-        private static ParameterExpression Deserialize(ParsedParameterExpression parsedExpression)
+        private NewArrayExpression Deserialize(ParsedNewArrayExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            switch (parsedExpression.NodeType)
+            {
+                case ExpressionType.NewArrayBounds:
+                    return Expression.NewArrayBounds(
+                        parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type),
+                        parsedExpression.Expressions.Select(Deserialize).ToArray());
+
+                case ExpressionType.NewArrayInit:
+                    return Expression.NewArrayInit(
+                        parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type),
+                        parsedExpression.Expressions.Select(Deserialize).ToArray());
+
+                default:
+                    throw new NotImplementedException($"Unknown expression type {parsedExpression.NodeType}");
+            }
+        }
+
+        private NewExpression Deserialize(ParsedNewExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.New(parsedExpression.Constructor == null ? null : (ConstructorInfo)Deserialize(parsedExpression.Constructor as ParsedMemberInfo));
+        }
+
+        private ParameterExpression Deserialize(ParsedParameterExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 
@@ -400,7 +609,7 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.Name);
         }
 
-        private static PropertyInfo Deserialize(ParsedPropertyInfo parsedPropertyInfo, Type reflectedType)
+        private PropertyInfo Deserialize(ParsedPropertyInfo parsedPropertyInfo, Type reflectedType)
         {
             if (parsedPropertyInfo == null) throw new ArgumentNullException(nameof(parsedPropertyInfo));
             if (reflectedType == null) throw new ArgumentNullException(nameof(reflectedType));
@@ -410,21 +619,28 @@ namespace ExpressionTreeParsing.Application
             return reflectedType.GetProperty(parsedPropertyInfo.Name, bindingFlags) ?? throw new Exception($"Property {parsedPropertyInfo.Name} not found on type {reflectedType}");
         }
 
-        private static SymbolDocumentInfo Deserialize(ParsedSymbolDocumentInfo parsedSymbolDocumentInfo)
+        private RuntimeVariablesExpression Deserialize(ParsedRuntimeVariablesExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.RuntimeVariables(parsedExpression.Variables.Select(Deserialize).ToArray());
+        }
+
+        private SymbolDocumentInfo Deserialize(ParsedSymbolDocumentInfo parsedSymbolDocumentInfo)
         {
             if (parsedSymbolDocumentInfo == null) throw new ArgumentNullException(nameof(parsedSymbolDocumentInfo));
 
             return Expression.SymbolDocument(parsedSymbolDocumentInfo.FileName);
         }
 
-        private static Type Deserialize(ParsedType parsedType)
+        private Type Deserialize(ParsedType parsedType)
         {
             if (parsedType == null) throw new ArgumentNullException(nameof(parsedType));
 
             return Type.GetType(parsedType.AssemblyQualifiedName);
         }
 
-        private static UnaryExpression Deserialize(ParsedUnaryExpression parsedExpression)
+        private UnaryExpression Deserialize(ParsedUnaryExpression parsedExpression)
         {
             if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
 

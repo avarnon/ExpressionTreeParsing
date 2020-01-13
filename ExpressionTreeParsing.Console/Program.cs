@@ -5,14 +5,13 @@ using ExpressionTreeParsing.Application;
 using ExpressionTreeParsing.Domain;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 namespace ExpressionTreeParsing.Console
 {
-    class Program
+    public class Program
     {
         private static readonly JsonSerializerSettings __jsonSerializerSettings = new JsonSerializerSettings()
         {
@@ -21,6 +20,7 @@ namespace ExpressionTreeParsing.Console
             {
                 new StringEnumConverter(),
                 new ParsedExpressionConverter(),
+                new ParsedMemberBindingConverter(),
                 new ParsedMemberInfoConverter(),
             },
             DefaultValueHandling = DefaultValueHandling.Include,
@@ -29,34 +29,34 @@ namespace ExpressionTreeParsing.Console
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
         };
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             try
             {
-                IServiceProvider serviceProvider = new ServiceCollection()
+                using ServiceProvider serviceProvider = new ServiceCollection()
                     .AddLogging(opt =>
                     {
                         opt.SetMinimumLevel(LogLevel.Debug);
-                        opt.AddConsole(_ => _.TimestampFormat = "yyyy-MM-ddTHH-mm-ss.fffffffZ");
+                        opt.AddConsole(_ => _.TimestampFormat = "yyyy-MM-ddTHH-mm-ss.fffffffZ ");
                     })
                     .AddSingleton<IExpressionSerializer<Model>, ExpressionSerializer<Model>>()
-                    .AddSingleton<ProgramRunner>()
+                    .AddSingleton<Runner>()
                     .BuildServiceProvider();
 
-                serviceProvider.GetService<ProgramRunner>().Run();
+                serviceProvider.GetService<Runner>().Run();
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(ex.ToString());
+                System.Console.Error.WriteLine(ex.ToString());
             }
         }
 
-        private class ProgramRunner
+        private class Runner
         {
             private readonly IExpressionSerializer<Model> _expressionSerializer;
             private readonly ILogger _logger;
 
-            public ProgramRunner(IExpressionSerializer<Model> expressionSerializer, ILogger<ProgramRunner> logger)
+            public Runner(IExpressionSerializer<Model> expressionSerializer, ILogger<Runner> logger)
             {
                 this._expressionSerializer = expressionSerializer ?? throw new ArgumentNullException(nameof(expressionSerializer));
                 this._logger = logger ?? throw new ArgumentNullException(nameof(logger));

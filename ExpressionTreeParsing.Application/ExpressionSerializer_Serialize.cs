@@ -9,7 +9,7 @@ namespace ExpressionTreeParsing.Application
 {
     public partial class ExpressionSerializer<TModel>
     {
-        private static ParsedExpression Serialize(Expression expression)
+        private ParsedExpression Serialize(Expression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -39,14 +39,42 @@ namespace ExpressionTreeParsing.Application
                 case ExpressionType.Goto:
                     return Serialize(expression as GotoExpression);
 
+                case ExpressionType.Index:
+                    return Serialize(expression as IndexExpression);
+
+                case ExpressionType.Invoke:
+                    return Serialize(expression as InvocationExpression);
+
+                case ExpressionType.Label:
+                    return Serialize(expression as LabelExpression);
+
                 case ExpressionType.Lambda:
                     return Serialize(expression as LambdaExpression);
+
+                case ExpressionType.ListInit:
+                    return Serialize(expression as ListInitExpression);
+
+                case ExpressionType.Loop:
+                    return Serialize(expression as LoopExpression);
 
                 case ExpressionType.MemberAccess:
                     return Serialize(expression as MemberExpression);
 
+                case ExpressionType.MemberInit:
+                    return Serialize(expression as MemberInitExpression);
+
+                case ExpressionType.New:
+                    return Serialize(expression as NewExpression);
+
                 case ExpressionType.Parameter:
                     return Serialize(expression as ParameterExpression);
+
+                case ExpressionType.RuntimeVariables:
+                    return Serialize(expression as RuntimeVariablesExpression);
+
+                case ExpressionType.NewArrayBounds:
+                case ExpressionType.NewArrayInit:
+                    return Serialize(expression as NewArrayExpression);
 
                 case ExpressionType.Add:
                 case ExpressionType.AddAssign:
@@ -112,26 +140,16 @@ namespace ExpressionTreeParsing.Application
                     return Serialize(expression as UnaryExpression);
 
                 case ExpressionType.Extension:
-                case ExpressionType.Index:
-                case ExpressionType.Invoke:
-                case ExpressionType.Label:
-                case ExpressionType.ListInit:
-                case ExpressionType.Loop:
-                case ExpressionType.MemberInit:
-                case ExpressionType.New:
-                case ExpressionType.NewArrayBounds:
-                case ExpressionType.NewArrayInit:
-                case ExpressionType.RuntimeVariables:
                 case ExpressionType.Switch:
                 case ExpressionType.Try:
                 case ExpressionType.TypeEqual:
                 case ExpressionType.TypeIs:
                 default:
-                    throw new Exception($"Unknown expression type {expression.NodeType} for expression {expression}");
+                    throw new NotImplementedException($"Unknown expression type {expression.NodeType} for expression {expression}");
             }
         }
 
-        private static ParsedBinaryExpression Serialize(BinaryExpression expression)
+        private ParsedBinaryExpression Serialize(BinaryExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -144,7 +162,7 @@ namespace ExpressionTreeParsing.Application
                 expression.Right == null ? null : Serialize(expression.Right));
         }
 
-        private static ParsedBlockExpression Serialize(BlockExpression expression)
+        private ParsedBlockExpression Serialize(BlockExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -155,7 +173,7 @@ namespace ExpressionTreeParsing.Application
                 expression.Variables.Select(Serialize).ToArray());
         }
 
-        private static ParsedConditionalExpression Serialize(ConditionalExpression expression)
+        private ParsedConditionalExpression Serialize(ConditionalExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -166,7 +184,7 @@ namespace ExpressionTreeParsing.Application
                 expression.Type == null ? null : Serialize(expression.Type));
         }
 
-        private static ParsedConstantExpression Serialize(ConstantExpression expression)
+        private ParsedConstantExpression Serialize(ConstantExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -175,7 +193,22 @@ namespace ExpressionTreeParsing.Application
                 expression.Value);
         }
 
-        private static ParsedDebugInfoExpression Serialize(DebugInfoExpression expression)
+        private ParsedConstructorInfo Serialize(ConstructorInfo constructorInfo)
+        {
+            if (constructorInfo == null) throw new ArgumentNullException(nameof(constructorInfo));
+
+            return new ParsedConstructorInfo(
+                constructorInfo.DeclaringType == null ? null : Serialize(constructorInfo.DeclaringType),
+                constructorInfo.GetGenericArguments().Select(Serialize).ToArray(),
+                constructorInfo.IsPublic,
+                constructorInfo.IsStatic,
+                constructorInfo.Name,
+                constructorInfo.GetParameters().Select(Serialize).ToArray(),
+                constructorInfo.ReflectedType == null ? null : Serialize(constructorInfo.ReflectedType),
+                constructorInfo.DeclaringType == null ? null : Serialize(constructorInfo.DeclaringType));
+        }
+
+        private ParsedDebugInfoExpression Serialize(DebugInfoExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -188,14 +221,14 @@ namespace ExpressionTreeParsing.Application
                 expression.StartLine);
         }
 
-        private static ParsedDefaultExpression Serialize(DefaultExpression expression)
+        private ParsedDefaultExpression Serialize(DefaultExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
             return new ParsedDefaultExpression(expression.Type == null ? null : Serialize(expression.Type));
         }
 
-        private static ParsedDynamicExpression Serialize(DynamicExpression expression)
+        private ParsedDynamicExpression Serialize(DynamicExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -204,18 +237,16 @@ namespace ExpressionTreeParsing.Application
                 expression.DelegateType == null ? null : Serialize(expression.DelegateType));
         }
 
-        private static ParsedGotoExpression Serialize(GotoExpression expression)
+        private ParsedElementInit Serialize(ElementInit elementInit)
         {
-            if (expression == null) throw new ArgumentNullException(nameof(expression));
+            if (elementInit == null) throw new ArgumentNullException(nameof(elementInit));
 
-            return new ParsedGotoExpression(
-                expression.Kind,
-                expression.Target == null ? null : Serialize(expression.Target),
-                expression.Type == null ? null : Serialize(expression.Type),
-                expression.Value == null ? null : Serialize(expression.Value));
+            return new ParsedElementInit(
+                elementInit.AddMethod == null ? null : Serialize(elementInit.AddMethod),
+                elementInit.Arguments.Select(Serialize).ToArray());
         }
 
-        private static ParsedFieldInfo Serialize(FieldInfo fieldInfo)
+        private ParsedFieldInfo Serialize(FieldInfo fieldInfo)
         {
             if (fieldInfo == null) throw new ArgumentNullException(nameof(fieldInfo));
 
@@ -228,7 +259,45 @@ namespace ExpressionTreeParsing.Application
                 fieldInfo.ReflectedType == null ? null : Serialize(fieldInfo.ReflectedType));
         }
 
-        private static ParsedLabelTarget Serialize(LabelTarget labelTarget)
+        private ParsedGotoExpression Serialize(GotoExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedGotoExpression(
+                expression.Kind,
+                expression.Target == null ? null : Serialize(expression.Target),
+                expression.Type == null ? null : Serialize(expression.Type),
+                expression.Value == null ? null : Serialize(expression.Value));
+        }
+
+        private ParsedIndexExpression Serialize(IndexExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedIndexExpression(
+                expression.Object == null ? null : Serialize(expression.Object),
+                expression.Arguments.Select(Serialize).ToArray());
+        }
+
+        private ParsedInvocationExpression Serialize(InvocationExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedInvocationExpression(
+                expression.Expression == null ? null : Serialize(expression.Expression),
+                expression.Arguments.Select(Serialize).ToArray());
+        }
+
+        private ParsedLabelExpression Serialize(LabelExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedLabelExpression(
+                expression.Target == null ? null : Serialize(expression.Target),
+                expression.DefaultValue == null ? null : Serialize(expression.DefaultValue));
+        }
+
+        private ParsedLabelTarget Serialize(LabelTarget labelTarget)
         {
             if (labelTarget == null) throw new ArgumentNullException(nameof(labelTarget));
 
@@ -237,7 +306,7 @@ namespace ExpressionTreeParsing.Application
                 labelTarget.Type == null ? null : Serialize(labelTarget.Type));
         }
 
-        private static ParsedLambdaExpression Serialize(LambdaExpression expression)
+        private ParsedLambdaExpression Serialize(LambdaExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -249,7 +318,35 @@ namespace ExpressionTreeParsing.Application
                 expression.TailCall);
         }
 
-        private static ParsedMemberExpression Serialize(MemberExpression expression)
+        private ParsedListInitExpression Serialize(ListInitExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedListInitExpression(
+                expression.NewExpression == null ? null : Serialize(expression.NewExpression),
+                expression.Initializers.Select(Serialize).ToArray());
+        }
+
+        private ParsedLoopExpression Serialize(LoopExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedLoopExpression(
+                expression.Body == null ? null : Serialize(expression.Body),
+                expression.BreakLabel == null ? null : Serialize(expression.BreakLabel),
+                expression.ContinueLabel == null ? null : Serialize(expression.ContinueLabel));
+        }
+
+        private ParsedMemberAssignment Serialize(MemberAssignment memberBinding)
+        {
+            if (memberBinding == null) throw new ArgumentNullException(nameof(memberBinding));
+
+            return new ParsedMemberAssignment(
+                memberBinding.Member == null ? null : Serialize(memberBinding.Member),
+                memberBinding.Expression == null ? null : Serialize(memberBinding.Expression));
+        }
+
+        private ParsedMemberExpression Serialize(MemberExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -259,12 +356,35 @@ namespace ExpressionTreeParsing.Application
                 expression.Type == null ? null : Serialize(expression.Type));
         }
 
-        private static ParsedMemberInfo Serialize(MemberInfo memberInfo)
+        private ParsedMemberBinding Serialize(MemberBinding memberBinding)
+        {
+            if (memberBinding == null) throw new ArgumentNullException(nameof(memberBinding));
+
+            switch (memberBinding.BindingType)
+            {
+                case MemberBindingType.Assignment:
+                    return Serialize(memberBinding as MemberAssignment);
+
+                case MemberBindingType.ListBinding:
+                    return Serialize(memberBinding as MemberListBinding);
+
+                case MemberBindingType.MemberBinding:
+                    return Serialize(memberBinding as MemberMemberBinding);
+
+                default:
+                    throw new NotImplementedException($"Unknown binding type {memberBinding.BindingType} for member binding {memberBinding}");
+            }
+        }
+
+        private ParsedMemberInfo Serialize(MemberInfo memberInfo)
         {
             if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
 
             switch (memberInfo.MemberType)
             {
+                case MemberTypes.Constructor:
+                    return Serialize(memberInfo as ConstructorInfo);
+
                 case MemberTypes.Field:
                     return Serialize(memberInfo as FieldInfo);
 
@@ -274,17 +394,43 @@ namespace ExpressionTreeParsing.Application
                 case MemberTypes.Method:
                     return Serialize(memberInfo as MethodInfo);
 
-                case MemberTypes.Constructor:
                 case MemberTypes.Custom:
                 case MemberTypes.Event:
                 case MemberTypes.NestedType:
                 case MemberTypes.TypeInfo:
                 default:
-                    throw new Exception($"Unknown member type {memberInfo.MemberType} for member {memberInfo}");
+                    throw new NotImplementedException($"Unknown member type {memberInfo.MemberType} for member {memberInfo}");
             }
         }
 
-        private static ParsedMethodInfo Serialize(MethodInfo methodInfo)
+        private ParsedMemberInitExpression Serialize(MemberInitExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedMemberInitExpression(
+                expression.NewExpression == null ? null : Serialize(expression.NewExpression),
+                expression.Bindings.Select(Serialize).ToArray());
+        }
+
+        private ParsedMemberListBinding Serialize(MemberListBinding memberBinding)
+        {
+            if (memberBinding == null) throw new ArgumentNullException(nameof(memberBinding));
+
+            return new ParsedMemberListBinding(
+                memberBinding.Member == null ? null : Serialize(memberBinding.Member),
+                memberBinding.Initializers.Select(Serialize).ToArray());
+        }
+
+        private ParsedMemberMemberBinding Serialize(MemberMemberBinding memberBinding)
+        {
+            if (memberBinding == null) throw new ArgumentNullException(nameof(memberBinding));
+
+            return new ParsedMemberMemberBinding(
+                memberBinding.Member == null ? null : Serialize(memberBinding.Member),
+                memberBinding.Bindings.Select(Serialize).ToArray());
+        }
+
+        private ParsedMethodInfo Serialize(MethodInfo methodInfo)
         {
             if (methodInfo == null) throw new ArgumentNullException(nameof(methodInfo));
 
@@ -299,7 +445,7 @@ namespace ExpressionTreeParsing.Application
                 methodInfo.ReturnType == null ? null : Serialize(methodInfo.ReturnType));
         }
 
-        private static ParsedMethodCallExpression Serialize(MethodCallExpression expression)
+        private ParsedMethodCallExpression Serialize(MethodCallExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -310,7 +456,24 @@ namespace ExpressionTreeParsing.Application
                 expression.Type == null ? null : Serialize(expression.Type));
         }
 
-        private static ParsedParameterExpression Serialize(ParameterExpression expression)
+        private ParsedNewArrayExpression Serialize(NewArrayExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedNewArrayExpression(
+                expression.Type == null ? null : Serialize(expression.Type),
+                expression.Expressions.Select(Serialize).ToArray(),
+                expression.NodeType);
+        }
+
+        private ParsedNewExpression Serialize(NewExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedNewExpression(expression.Constructor == null ? null : Serialize(expression.Constructor));
+        }
+
+        private ParsedParameterExpression Serialize(ParameterExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
@@ -320,7 +483,7 @@ namespace ExpressionTreeParsing.Application
                 expression.Type == null ? null : Serialize(expression.Type));
         }
 
-        private static ParsedParameterInfo Serialize(ParameterInfo parameterInfo)
+        private ParsedParameterInfo Serialize(ParameterInfo parameterInfo)
         {
             if (parameterInfo == null) throw new ArgumentNullException(nameof(parameterInfo));
 
@@ -330,7 +493,7 @@ namespace ExpressionTreeParsing.Application
                 parameterInfo.Position);
         }
 
-        private static ParsedPropertyInfo Serialize(PropertyInfo propertyInfo)
+        private ParsedPropertyInfo Serialize(PropertyInfo propertyInfo)
         {
             if (propertyInfo == null) throw new ArgumentNullException(nameof(propertyInfo));
 
@@ -341,14 +504,21 @@ namespace ExpressionTreeParsing.Application
                 propertyInfo.ReflectedType == null ? null : Serialize(propertyInfo.ReflectedType));
         }
 
-        private static ParsedSymbolDocumentInfo Serialize(SymbolDocumentInfo symbolDocumentInfo)
+        private ParsedRuntimeVariablesExpression Serialize(RuntimeVariablesExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedRuntimeVariablesExpression(expression.Variables.Select(Serialize).ToArray());
+        }
+
+        private ParsedSymbolDocumentInfo Serialize(SymbolDocumentInfo symbolDocumentInfo)
         {
             if (symbolDocumentInfo == null) throw new ArgumentNullException(nameof(symbolDocumentInfo));
 
             return new ParsedSymbolDocumentInfo(symbolDocumentInfo.FileName);
         }
 
-        private static ParsedType Serialize(Type type)
+        private ParsedType Serialize(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
 
@@ -362,7 +532,7 @@ namespace ExpressionTreeParsing.Application
             return new ParsedType(assemblyName.ToString());
         }
 
-        private static ParsedUnaryExpression Serialize(UnaryExpression expression)
+        private ParsedUnaryExpression Serialize(UnaryExpression expression)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
 
