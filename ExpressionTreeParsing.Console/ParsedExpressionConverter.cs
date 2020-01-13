@@ -49,14 +49,51 @@ namespace ExpressionTreeParsing.Console
                 case ExpressionType.Goto:
                     return jObject.ToObject<ParsedGotoExpression>(serializer);
 
+                case ExpressionType.Index:
+                    return jObject.ToObject<ParsedIndexExpression>(serializer);
+
+                case ExpressionType.Invoke:
+                    return jObject.ToObject<ParsedInvocationExpression>(serializer);
+
                 case ExpressionType.Lambda:
                     return jObject.ToObject<ParsedLambdaExpression>(serializer);
+
+                case ExpressionType.Label:
+                    return jObject.ToObject<ParsedLabelExpression>(serializer);
+
+                case ExpressionType.ListInit:
+                    return jObject.ToObject<ParsedListInitExpression>(serializer);
+
+                case ExpressionType.Loop:
+                    return jObject.ToObject<ParsedLoopExpression>(serializer);
 
                 case ExpressionType.MemberAccess:
                     return jObject.ToObject<ParsedMemberExpression>(serializer);
 
+                case ExpressionType.MemberInit:
+                    return jObject.ToObject<ParsedMemberInitExpression>(serializer);
+
+                case ExpressionType.New:
+                    return jObject.ToObject<ParsedNewExpression>(serializer);
+
                 case ExpressionType.Parameter:
                     return jObject.ToObject<ParsedParameterExpression>(serializer);
+
+                case ExpressionType.RuntimeVariables:
+                    return jObject.ToObject<ParsedRuntimeVariablesExpression>(serializer);
+
+                case ExpressionType.Switch:
+                    return jObject.ToObject<ParsedSwitchExpression>(serializer);
+
+                case ExpressionType.Try:
+                    return jObject.ToObject<ParsedTryExpression>(serializer);
+
+                case ExpressionType.TypeEqual:
+                    return jObject.ToObject<ParsedTypeBinaryExpression>(serializer);
+
+                case ExpressionType.NewArrayBounds:
+                case ExpressionType.NewArrayInit:
+                    return jObject.ToObject<ParsedNewArrayExpression>(serializer);
 
                 case ExpressionType.Add:
                 case ExpressionType.AddAssign:
@@ -97,6 +134,7 @@ namespace ExpressionTreeParsing.Console
                 case ExpressionType.SubtractAssign:
                 case ExpressionType.SubtractChecked:
                 case ExpressionType.SubtractAssignChecked:
+                case ExpressionType.TypeIs:
                     return jObject.ToObject<ParsedBinaryExpression>(serializer);
 
                 case ExpressionType.ArrayLength:
@@ -122,20 +160,6 @@ namespace ExpressionTreeParsing.Console
                     return jObject.ToObject<ParsedUnaryExpression>(serializer);
 
                 case ExpressionType.Extension:
-                case ExpressionType.Index:
-                case ExpressionType.Invoke:
-                case ExpressionType.Label:
-                case ExpressionType.ListInit:
-                case ExpressionType.Loop:
-                case ExpressionType.MemberInit:
-                case ExpressionType.New:
-                case ExpressionType.NewArrayBounds:
-                case ExpressionType.NewArrayInit:
-                case ExpressionType.RuntimeVariables:
-                case ExpressionType.Switch:
-                case ExpressionType.Try:
-                case ExpressionType.TypeEqual:
-                case ExpressionType.TypeIs:
                 default:
                     throw new NotImplementedException();
             }

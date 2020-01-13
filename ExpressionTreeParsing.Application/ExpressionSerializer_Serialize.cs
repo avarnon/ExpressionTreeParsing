@@ -72,6 +72,15 @@ namespace ExpressionTreeParsing.Application
                 case ExpressionType.RuntimeVariables:
                     return Serialize(expression as RuntimeVariablesExpression);
 
+                case ExpressionType.Switch:
+                    return Serialize(expression as SwitchExpression);
+
+                case ExpressionType.Try:
+                    return Serialize(expression as TryExpression);
+
+                case ExpressionType.TypeEqual:
+                    return Serialize(expression as TypeBinaryExpression);
+
                 case ExpressionType.NewArrayBounds:
                 case ExpressionType.NewArrayInit:
                     return Serialize(expression as NewArrayExpression);
@@ -115,6 +124,7 @@ namespace ExpressionTreeParsing.Application
                 case ExpressionType.SubtractAssign:
                 case ExpressionType.SubtractChecked:
                 case ExpressionType.SubtractAssignChecked:
+                case ExpressionType.TypeIs:
                     return Serialize(expression as BinaryExpression);
 
                 case ExpressionType.ArrayLength:
@@ -140,10 +150,15 @@ namespace ExpressionTreeParsing.Application
                     return Serialize(expression as UnaryExpression);
 
                 case ExpressionType.Extension:
-                case ExpressionType.Switch:
-                case ExpressionType.Try:
-                case ExpressionType.TypeEqual:
-                case ExpressionType.TypeIs:
+                    Expression currentExpression = expression;
+                    do
+                    {
+                        currentExpression = currentExpression.ReduceAndCheck();
+                    }
+                    while (currentExpression.NodeType == ExpressionType.Extension);
+
+                    return Serialize(currentExpression);
+
                 default:
                     throw new NotImplementedException($"Unknown expression type {expression.NodeType} for expression {expression}");
             }
@@ -171,6 +186,18 @@ namespace ExpressionTreeParsing.Application
                 expression.Result == null ? null : Serialize(expression.Result),
                 expression.Type == null ? null : Serialize(expression.Type),
                 expression.Variables.Select(Serialize).ToArray());
+        }
+
+        private ParsedCatchBlock Serialize(CatchBlock catchBlock)
+        {
+            if (catchBlock == null) throw new ArgumentNullException(nameof(catchBlock));
+
+
+            return new ParsedCatchBlock(
+                catchBlock.Variable?.Type == null ? null : Serialize(catchBlock.Variable.Type),
+                catchBlock.Variable == null ? null : Serialize(catchBlock.Variable),
+                catchBlock.Filter == null ? null : Serialize(catchBlock.Filter),
+                catchBlock.Body == null ? null : Serialize(catchBlock.Body));
         }
 
         private ParsedConditionalExpression Serialize(ConditionalExpression expression)
@@ -511,11 +538,44 @@ namespace ExpressionTreeParsing.Application
             return new ParsedRuntimeVariablesExpression(expression.Variables.Select(Serialize).ToArray());
         }
 
+        private ParsedSwitchCase Serialize(SwitchCase switchCase)
+        {
+            if (switchCase == null) throw new ArgumentNullException(nameof(switchCase));
+
+            return new ParsedSwitchCase(
+                switchCase.Body == null ? null : Serialize(switchCase.Body),
+                switchCase.TestValues.Select(Serialize).ToArray());
+        }
+
+        private ParsedSwitchExpression Serialize(SwitchExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedSwitchExpression(
+                expression.Type == null ? null : Serialize(expression.Type),
+                expression.SwitchValue == null ? null : Serialize(expression.SwitchValue),
+                expression.DefaultBody == null ? null : Serialize(expression.DefaultBody),
+                expression.Comparison == null ? null : Serialize(expression.Comparison),
+                expression.Cases.Select(Serialize).ToArray());
+        }
+
         private ParsedSymbolDocumentInfo Serialize(SymbolDocumentInfo symbolDocumentInfo)
         {
             if (symbolDocumentInfo == null) throw new ArgumentNullException(nameof(symbolDocumentInfo));
 
             return new ParsedSymbolDocumentInfo(symbolDocumentInfo.FileName);
+        }
+
+        private ParsedTryExpression Serialize(TryExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedTryExpression(
+                expression.Type == null ? null : Serialize(expression.Type),
+                expression.Body == null ? null : Serialize(expression.Body),
+                expression.Finally == null ? null : Serialize(expression.Fault),
+                expression.Fault == null ? null : Serialize(expression.Finally),
+                expression.Handlers.Select(Serialize).ToArray());
         }
 
         private ParsedType Serialize(Type type)
@@ -530,6 +590,15 @@ namespace ExpressionTreeParsing.Application
             }
 
             return new ParsedType(assemblyName.ToString());
+        }
+
+        private ParsedTypeBinaryExpression Serialize(TypeBinaryExpression expression)
+        {
+            if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+            return new ParsedTypeBinaryExpression(
+                expression.Expression == null ? null : Serialize(expression.Expression),
+                expression.Type == null ? null : Serialize(expression.Type));
         }
 
         private ParsedUnaryExpression Serialize(UnaryExpression expression)

@@ -72,6 +72,15 @@ namespace ExpressionTreeParsing.Application
                 case ExpressionType.RuntimeVariables:
                     return Deserialize(parsedExpression as ParsedRuntimeVariablesExpression);
 
+                case ExpressionType.Switch:
+                    return Deserialize(parsedExpression as ParsedSwitchExpression);
+
+                case ExpressionType.Try:
+                    return Deserialize(parsedExpression as ParsedTryExpression);
+
+                case ExpressionType.TypeEqual:
+                    return Deserialize(parsedExpression as ParsedTypeBinaryExpression);
+
                 case ExpressionType.NewArrayBounds:
                 case ExpressionType.NewArrayInit:
                     return Deserialize(parsedExpression as ParsedNewArrayExpression);
@@ -115,6 +124,7 @@ namespace ExpressionTreeParsing.Application
                 case ExpressionType.SubtractAssign:
                 case ExpressionType.SubtractChecked:
                 case ExpressionType.SubtractAssignChecked:
+                case ExpressionType.TypeIs:
                     return Deserialize(parsedExpression as ParsedBinaryExpression);
 
                 case ExpressionType.ArrayLength:
@@ -140,10 +150,6 @@ namespace ExpressionTreeParsing.Application
                     return Deserialize(parsedExpression as ParsedUnaryExpression);
 
                 case ExpressionType.Extension:
-                case ExpressionType.Switch:
-                case ExpressionType.Try:
-                case ExpressionType.TypeEqual:
-                case ExpressionType.TypeIs:
                 default:
                     throw new NotImplementedException($"Unknown expression type {parsedExpression.NodeType}");
             }
@@ -183,6 +189,17 @@ namespace ExpressionTreeParsing.Application
                 parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type),
                 variables,
                 finalExpressions);
+        }
+
+        private CatchBlock Deserialize(ParsedCatchBlock parsedCatchBlock)
+        {
+            if (parsedCatchBlock == null) throw new ArgumentNullException(nameof(parsedCatchBlock));
+
+            return Expression.MakeCatchBlock(
+                parsedCatchBlock.Type == null ? null : Deserialize(parsedCatchBlock.Type),
+                parsedCatchBlock.Variable == null ? null : Deserialize(parsedCatchBlock.Variable),
+                parsedCatchBlock.Body == null ? null : Deserialize(parsedCatchBlock.Body),
+                parsedCatchBlock.Filter == null ? null : Deserialize(parsedCatchBlock.Filter));
         }
 
         private ConditionalExpression Deserialize(ParsedConditionalExpression parsedExpression)
@@ -626,6 +643,27 @@ namespace ExpressionTreeParsing.Application
             return Expression.RuntimeVariables(parsedExpression.Variables.Select(Deserialize).ToArray());
         }
 
+        private SwitchCase Deserialize(ParsedSwitchCase parsedSwitchCase)
+        {
+            if (parsedSwitchCase == null) throw new ArgumentNullException(nameof(parsedSwitchCase));
+
+            return Expression.SwitchCase(
+                parsedSwitchCase.Body == null ? null : Deserialize(parsedSwitchCase.Body),
+                parsedSwitchCase.TestValues.Select(Deserialize).ToArray());
+        }
+
+        private SwitchExpression Deserialize(ParsedSwitchExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.Switch(
+                parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type),
+                parsedExpression.SwitchValue == null ? null : Deserialize(parsedExpression.SwitchValue),
+                parsedExpression.DefaultBody == null ? null : Deserialize(parsedExpression.DefaultBody),
+                parsedExpression.Comparison == null ? null : (MethodInfo)Deserialize(parsedExpression.Comparison as ParsedMemberInfo),
+                parsedExpression.Cases.Select(Deserialize).ToArray());
+        }
+
         private SymbolDocumentInfo Deserialize(ParsedSymbolDocumentInfo parsedSymbolDocumentInfo)
         {
             if (parsedSymbolDocumentInfo == null) throw new ArgumentNullException(nameof(parsedSymbolDocumentInfo));
@@ -633,11 +671,32 @@ namespace ExpressionTreeParsing.Application
             return Expression.SymbolDocument(parsedSymbolDocumentInfo.FileName);
         }
 
+        private TryExpression Deserialize(ParsedTryExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.MakeTry(
+                parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type),
+                parsedExpression.Body == null ? null : Deserialize(parsedExpression.Body),
+                parsedExpression.Finally == null ? null : Deserialize(parsedExpression.Fault),
+                parsedExpression.Fault == null ? null : Deserialize(parsedExpression.Finally),
+                parsedExpression.Handlers.Select(Deserialize).ToArray());
+        }
+
         private Type Deserialize(ParsedType parsedType)
         {
             if (parsedType == null) throw new ArgumentNullException(nameof(parsedType));
 
             return Type.GetType(parsedType.AssemblyQualifiedName);
+        }
+
+        private TypeBinaryExpression Deserialize(ParsedTypeBinaryExpression parsedExpression)
+        {
+            if (parsedExpression == null) throw new ArgumentNullException(nameof(parsedExpression));
+
+            return Expression.TypeEqual(
+                parsedExpression.Expression == null ? null : Deserialize(parsedExpression.Expression),
+                parsedExpression.Type == null ? null : Deserialize(parsedExpression.Type));
         }
 
         private UnaryExpression Deserialize(ParsedUnaryExpression parsedExpression)
