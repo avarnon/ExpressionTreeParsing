@@ -195,10 +195,15 @@ namespace ExpressionTreeParsing.Application
         {
             if (parsedCatchBlock == null) throw new ArgumentNullException(nameof(parsedCatchBlock));
 
+            Expression body = parsedCatchBlock.Body == null ? null : Deserialize(parsedCatchBlock.Body);
+            ParameterExpression variable = parsedCatchBlock.Variable == null ? null : Deserialize(parsedCatchBlock.Variable);
+            ParameterReplacementVisitor visitorExpression = new ParameterReplacementVisitor(variable);
+            Expression finalBody = visitorExpression.Visit(body);
+
             return Expression.MakeCatchBlock(
                 parsedCatchBlock.Type == null ? null : Deserialize(parsedCatchBlock.Type),
-                parsedCatchBlock.Variable == null ? null : Deserialize(parsedCatchBlock.Variable),
-                parsedCatchBlock.Body == null ? null : Deserialize(parsedCatchBlock.Body),
+                variable,
+                finalBody,
                 parsedCatchBlock.Filter == null ? null : Deserialize(parsedCatchBlock.Filter));
         }
 
